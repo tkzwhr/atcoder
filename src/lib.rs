@@ -1,3 +1,79 @@
+mod tests;
+
+#[allow(dead_code)]
+mod grouped_map {
+    use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+    use std::hash::Hash;
+
+    #[derive(Default)]
+    pub struct GroupedHashMap<T, U>(pub HashMap<T, HashSet<U>>);
+
+    pub type IndexedGroupedHashMap<U> = GroupedHashMap<usize, U>;
+
+    impl<T, U> GroupedHashMap<T, U> {
+        pub fn add(&mut self, key: T, value: U)
+        where
+            T: Eq + Hash,
+            U: Eq + Hash,
+        {
+            if let Some(h) = self.0.get_mut(&key) {
+                h.insert(value);
+            } else {
+                self.0.insert(key, HashSet::from([value]));
+            }
+        }
+
+        pub fn remove(&mut self, key: &T, value: &U)
+        where
+            T: Eq + Hash,
+            U: Eq + Hash,
+        {
+            let mut is_empty = false;
+            if let Some(h) = self.0.get_mut(&key) {
+                h.remove(&value);
+                is_empty = h.is_empty();
+            }
+            if is_empty {
+                self.0.remove(&key);
+            }
+        }
+    }
+
+    #[derive(Default)]
+    pub struct GroupedBTreeMap<T, U>(pub BTreeMap<T, BTreeSet<U>>);
+
+    pub type IndexedGroupedBTreeMap<U> = GroupedBTreeMap<usize, U>;
+
+    impl<T, U> GroupedBTreeMap<T, U> {
+        pub fn add(&mut self, key: T, value: U)
+        where
+            T: Ord,
+            U: Ord,
+        {
+            if let Some(h) = self.0.get_mut(&key) {
+                h.insert(value);
+            } else {
+                self.0.insert(key, BTreeSet::from([value]));
+            }
+        }
+
+        pub fn remove(&mut self, key: &T, value: &U)
+        where
+            T: Ord,
+            U: Ord,
+        {
+            let mut is_empty = false;
+            if let Some(h) = self.0.get_mut(&key) {
+                h.remove(&value);
+                is_empty = h.is_empty();
+            }
+            if is_empty {
+                self.0.remove(&key);
+            }
+        }
+    }
+}
+
 #[allow(dead_code)]
 mod graph {
     use std::cmp::Reverse;
@@ -12,7 +88,9 @@ mod graph {
 
     impl<T, U> Graph<T, U> {
         pub fn new() -> Graph<T, U> {
-            Graph { data: HashMap::new() }
+            Graph {
+                data: HashMap::new(),
+            }
         }
 
         pub fn joint(&mut self, src: T, dest: T, data: U, bidirectional: bool)
@@ -104,136 +182,5 @@ mod graph {
 
             dp
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashSet;
-
-    use crate::graph::{Graph, Node};
-
-    fn next(graph: &Graph<usize, usize>, src: &usize) -> Option<HashSet<(usize, usize)>> {
-        if let Some(hset) = graph.next(src) {
-            let result = hset.iter()
-                .map(|&Node(p, v)| {
-                    (p, v)
-                })
-                .collect::<HashSet<_, _>>();
-            Some(result)
-        } else {
-            None
-        }
-    }
-
-    #[test]
-    fn test_unidirectional_joint() {
-        // Arrange
-        let mut graph = Graph::new();
-
-        // Act
-        graph.joint(1, 2, 10, false);
-        graph.joint(2, 3, 20, false);
-        graph.joint(3, 1, 30, false);
-        graph.joint(4, 3, 40, false);
-        graph.joint(3, 4, 50, false);
-        graph.joint(3, 4, 60, false);
-
-        // Assert
-        assert_eq!(next(&graph, &1), Some(HashSet::from([
-            (2, 10),
-        ])));
-        assert_eq!(next(&graph, &2), Some(HashSet::from([
-            (3, 20),
-        ])));
-        assert_eq!(next(&graph, &3), Some(HashSet::from([
-            (1, 30),
-            (4, 60),
-        ])));
-        assert_eq!(next(&graph, &4), Some(HashSet::from([
-            (3, 40),
-        ])));
-    }
-
-    #[test]
-    fn test_bidirectional_joint() {
-        // Arrange
-        let mut graph = Graph::new();
-
-        // Act
-        graph.joint(1, 2, 10, true);
-        graph.joint(2, 3, 20, true);
-        graph.joint(3, 1, 30, true);
-        graph.joint(4, 3, 40, true);
-        graph.joint(3, 4, 60, true);
-
-        // Assert
-        assert_eq!(next(&graph, &1), Some(HashSet::from([
-            (2, 10),
-            (3, 30),
-        ])));
-        assert_eq!(next(&graph, &2), Some(HashSet::from([
-            (1, 10),
-            (3, 20),
-        ])));
-        assert_eq!(next(&graph, &3), Some(HashSet::from([
-            (1, 30),
-            (2, 20),
-            (4, 60),
-        ])));
-        assert_eq!(next(&graph, &4), Some(HashSet::from([
-            (3, 60),
-        ])));
-    }
-
-    #[test]
-    fn test_joint_performance() {
-        // Arrange
-        let mut graph = Graph::new();
-
-        // Act
-        for i in 0..200_000 {
-            graph.joint(i, i, i, true);
-        }
-    }
-
-    #[test]
-    fn test_solve_by_dijkstra() {
-        // Arrange
-        let mut graph: Graph<usize, usize> = Graph::new();
-        graph.joint(1, 2, 15, true);
-        graph.joint(1, 4, 20, true);
-        graph.joint(2, 3, 65, true);
-        graph.joint(2, 5, 4, true);
-        graph.joint(3, 6, 50, true);
-        graph.joint(4, 5, 30, true);
-        graph.joint(5, 6, 8, true);
-
-        // Act
-        let result = graph.solve_by_dijkstra(1);
-
-        // Assert
-        dbg!(&result);
-        assert_eq!(result.get(&1), Some(&0));
-        assert_eq!(result.get(&2), Some(&15));
-        assert_eq!(result.get(&3), Some(&77));
-        assert_eq!(result.get(&4), Some(&20));
-        assert_eq!(result.get(&5), Some(&19));
-        assert_eq!(result.get(&6), Some(&27));
-    }
-
-    #[test]
-    fn test_solve_by_dijkstra_performance() {
-        // Arrange
-        let mut graph = Graph::new();
-
-        // Act
-        for i in 1..200_000 {
-            graph.joint(i, i + 1, i, true);
-        }
-        let result = graph.solve_by_dijkstra(1);
-
-        // Assert
-        assert_eq!(result.get(&200_000), Some(&19_999_900_000));
     }
 }
