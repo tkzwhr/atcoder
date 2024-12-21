@@ -1,6 +1,72 @@
 mod tests;
 
 #[allow(dead_code)]
+mod num_theory {
+    use std::collections::{BTreeMap, BTreeSet};
+
+    pub struct PrimeFactorization(pub BTreeMap<usize, usize>);
+
+    impl PrimeFactorization {
+        pub fn new(mut n: usize) -> Self {
+            if n < 2 {
+                return PrimeFactorization(BTreeMap::new());
+            }
+
+            let primes = eratosthenes(n);
+            let mut res = BTreeMap::new();
+
+            for p in primes {
+                let mut times = 0;
+                while n % p == 0 {
+                    times += 1;
+                    n /= p;
+                }
+                if times > 0 {
+                    res.insert(p, times);
+                }
+            }
+
+            PrimeFactorization(res)
+        }
+    }
+
+    pub fn eratosthenes(n: usize) -> BTreeSet<usize> {
+        if n < 2 {
+            return BTreeSet::new();
+        }
+        if n == 2 {
+            return BTreeSet::from([2]);
+        }
+        if n == 3 {
+            return BTreeSet::from([2, 3]);
+        }
+
+        let mut sieve = vec![true; n + 1];
+        let mut res = BTreeSet::from([2, 3]);
+
+        let mut check = |p: usize| {
+            if sieve[p] {
+                res.insert(p);
+
+                let mut j = p * p;
+                while j <= n {
+                    sieve[j] = false;
+                    j += p;
+                }
+            }
+        };
+
+        for i in 1..=(n + 1) / 6 {
+            check(i * 6 - 1);
+            if i * 6 + 1 <= n {
+                check(i * 6 + 1);
+            }
+        }
+        res
+    }
+}
+
+#[allow(dead_code)]
 mod grouped_map {
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     use std::hash::Hash;

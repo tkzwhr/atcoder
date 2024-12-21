@@ -1,4 +1,71 @@
 #[cfg(test)]
+mod num_theory {
+    use crate::num_theory;
+    use crate::num_theory::PrimeFactorization;
+    use std::collections::{BTreeMap, BTreeSet};
+
+    #[test]
+    fn eratosthenes() {
+        let primes = num_theory::eratosthenes(0);
+        assert_eq!(primes, BTreeSet::from([]));
+
+        let primes = num_theory::eratosthenes(1);
+        assert_eq!(primes, BTreeSet::from([]));
+
+        let primes = num_theory::eratosthenes(2);
+        assert_eq!(primes, BTreeSet::from([2]));
+
+        let primes = num_theory::eratosthenes(3);
+        assert_eq!(primes, BTreeSet::from([2, 3]));
+
+        let primes = num_theory::eratosthenes(4);
+        assert_eq!(primes, BTreeSet::from([2, 3]));
+
+        let primes = num_theory::eratosthenes(5);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5]));
+
+        let primes = num_theory::eratosthenes(6);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5]));
+
+        let primes = num_theory::eratosthenes(7);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5, 7]));
+
+        let primes = num_theory::eratosthenes(11);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5, 7, 11]));
+
+        let primes = num_theory::eratosthenes(12);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5, 7, 11]));
+
+        let primes = num_theory::eratosthenes(13);
+        assert_eq!(primes, BTreeSet::from([2, 3, 5, 7, 11, 13]));
+
+        let primes = num_theory::eratosthenes(100);
+        assert_eq!(primes.len(), 25);
+
+        let primes = num_theory::eratosthenes(10_000_000);
+        assert_eq!(primes.len(), 664579);
+    }
+
+    #[test]
+    fn prime_factorize() {
+        let pf = PrimeFactorization::new(1);
+        assert_eq!(pf.0, BTreeMap::from([]));
+
+        let pf = PrimeFactorization::new(2);
+        assert_eq!(pf.0, BTreeMap::from([(2, 1)]));
+
+        let pf = PrimeFactorization::new(12);
+        assert_eq!(pf.0, BTreeMap::from([(2, 2), (3, 1)]));
+
+        let pf = PrimeFactorization::new(9_999_943);
+        assert_eq!(pf.0, BTreeMap::from([(9_999_943, 1)]));
+
+        let pf = PrimeFactorization::new(10_000_000);
+        assert_eq!(pf.0, BTreeMap::from([(2, 7), (5, 7)]));
+    }
+}
+
+#[cfg(test)]
 mod grouped_map {
     use crate::grouped_map::*;
     use std::collections::{BTreeSet, HashSet};
@@ -75,10 +142,10 @@ mod graph {
         graph.joint(3, 4, 60, false);
 
         // Assert
-        assert_eq!(next(&graph, &1), Some(HashSet::from([(2, 10), ])));
-        assert_eq!(next(&graph, &2), Some(HashSet::from([(3, 20), ])));
-        assert_eq!(next(&graph, &3), Some(HashSet::from([(1, 30), (4, 60), ])));
-        assert_eq!(next(&graph, &4), Some(HashSet::from([(3, 40), ])));
+        assert_eq!(next(&graph, &1), Some(HashSet::from([(2, 10),])));
+        assert_eq!(next(&graph, &2), Some(HashSet::from([(3, 20),])));
+        assert_eq!(next(&graph, &3), Some(HashSet::from([(1, 30), (4, 60),])));
+        assert_eq!(next(&graph, &4), Some(HashSet::from([(3, 40),])));
     }
 
     #[test]
@@ -94,13 +161,13 @@ mod graph {
         graph.joint(3, 4, 60, true);
 
         // Assert
-        assert_eq!(next(&graph, &1), Some(HashSet::from([(2, 10), (3, 30), ])));
-        assert_eq!(next(&graph, &2), Some(HashSet::from([(1, 10), (3, 20), ])));
+        assert_eq!(next(&graph, &1), Some(HashSet::from([(2, 10), (3, 30),])));
+        assert_eq!(next(&graph, &2), Some(HashSet::from([(1, 10), (3, 20),])));
         assert_eq!(
             next(&graph, &3),
-            Some(HashSet::from([(1, 30), (2, 20), (4, 60), ]))
+            Some(HashSet::from([(1, 30), (2, 20), (4, 60),]))
         );
-        assert_eq!(next(&graph, &4), Some(HashSet::from([(3, 60), ])));
+        assert_eq!(next(&graph, &4), Some(HashSet::from([(3, 60),])));
     }
 
     #[test]
