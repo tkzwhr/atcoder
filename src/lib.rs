@@ -1,3 +1,5 @@
+mod mapset;
+
 mod tests;
 
 #[allow(dead_code)]
