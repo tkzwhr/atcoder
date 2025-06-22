@@ -1,9 +1,5 @@
-use proconio::input;
+use atcoder::a::{main as lib_main};
 
 fn main() {
-    input! {
-        n: usize
-    }
-
-    println!("{}", n);
+    lib_main()
 }
